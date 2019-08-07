@@ -123,7 +123,6 @@ uint8_t* readFileBytes(const char* name)
 
 INT main(INT argc, PCSTR* argv)
 {
-	printf("size of shellcode: %lu bytes\n", (DWORD)((DWORD)stub - (DWORD)shellcode));
 	if (argc == 1) {
 		printf("usage: %s <path-to-dll> [-key xor-key-to-decrypt-dll]", argv[0]);
 		exit(1);
@@ -170,7 +169,11 @@ INT main(INT argc, PCSTR* argv)
 			binary + sectionHeaders[i].PointerToRawData, sectionHeaders[i].SizeOfRawData, NULL);
 	free(binary);
 
-	LoaderData* loaderMemory = (LoaderData*)VirtualAllocEx(process, NULL, 8192, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READ);
+	size_t loaderMemSize = sizeof(LoaderData) + (DWORD)stub - (DWORD)shellcode;
+	printf("shellcode size: %lu\n", (DWORD)((DWORD)stub - (DWORD)shellcode));
+	printf("loader mem size: %lu\n", loaderMemSize);
+
+	LoaderData* loaderMemory = (LoaderData*)VirtualAllocEx(process, NULL, loaderMemSize, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READ);
 	LoaderData loaderParams = { executableImage, LoadLibraryA, GetProcAddress, (VOID(WINAPI*)(PVOID, SIZE_T))GetProcAddress(GetModuleHandleW(L"ntdll"), "RtlZeroMemory") };
 	WriteProcessMemory(process, loaderMemory, &loaderParams, sizeof(LoaderData), NULL);
 	WriteProcessMemory(process, loaderMemory + 1, shellcode, (DWORD)stub - (DWORD)shellcode, NULL);
