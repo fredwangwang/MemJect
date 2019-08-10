@@ -5,7 +5,7 @@
 
 
 // Target process name
-#define PROCESS_NAME "csgo.exe"
+#define PROCESS_NAME "HelloWorld.exe"
 
 #define ERASE_ENTRY_POINT 1
 #define ERASE_PE_HEADER 1
@@ -75,14 +75,6 @@ DWORD WINAPI shellcode(LoaderData* loaderData)
 			firstThunk++;
 		}
 		importDirectory++;
-	}
-
-	// execute tls callbacks
-	PIMAGE_TLS_DIRECTORY tlsDirectory = (PIMAGE_TLS_DIRECTORY)(pBase + optHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_TLS].VirtualAddress);
-	PIMAGE_TLS_CALLBACK* tlsCallback = (PIMAGE_TLS_CALLBACK*)(tlsDirectory->AddressOfCallBacks);
-	while (*tlsCallback) {
-		(*tlsCallback)(pBase, DLL_PROCESS_ATTACH, NULL);
-		tlsCallback++;
 	}
 
 	// call dllmain
